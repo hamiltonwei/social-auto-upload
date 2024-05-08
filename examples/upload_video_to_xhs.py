@@ -2,6 +2,12 @@ import configparser
 from pathlib import Path
 from time import sleep
 
+import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
 from xhs import XhsClient
 
 from conf import BASE_DIR

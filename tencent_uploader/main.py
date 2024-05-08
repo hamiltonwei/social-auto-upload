@@ -2,10 +2,14 @@
 import json
 from datetime import datetime
 
-from playwright.async_api import Playwright, async_playwright
 import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+from playwright.async_api import Playwright, async_playwright
 import asyncio
-
 from utils.files_times import get_absolute_path
 
 
@@ -70,7 +74,7 @@ async def weixin_setup(account_file, handle=False):
             return False
         print('[+] cookie文件不存在或已失效，即将自动打开浏览器，请扫码登录，登陆后会自动生成cookie文件')
         # await save_storage_state(account_file)
-        os.system('python3 -m playwright install')
+        # os.system('python -m playwright install')
         os.system(f'playwright codegen channels.weixin.qq.com --save-storage={account_file}')  # 生成cookie文件
     return True
 
@@ -131,7 +135,10 @@ class TencentVideo(object):
 
     async def upload(self, playwright: Playwright) -> None:
         # 使用 Chromium (这里使用系统内浏览器，用chromium 会造成h264错误
-        browser = await playwright.chromium.launch(headless=False, executable_path=self.local_executable_path)
+        if self.local_executable_path:
+            browser = await playwright.firefox.launch(headless=False, executable_path=self.local_executable_path)
+        else:
+            browser = await playwright.firefox.launch(headless=False)
         # 创建一个浏览器上下文，使用指定的 cookie 文件
         context = await browser.new_context(storage_state=f"{self.account_file}")
 

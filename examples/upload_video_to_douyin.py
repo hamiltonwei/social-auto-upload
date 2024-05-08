@@ -1,9 +1,17 @@
 import asyncio
 from pathlib import Path
 
+
+import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
 from conf import BASE_DIR
 from douyin_uploader.main import douyin_setup, DouYinVideo
 from utils.files_times import generate_schedule_time_next_day, get_title_and_hashtags
+
 
 
 if __name__ == '__main__':
