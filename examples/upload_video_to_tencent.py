@@ -8,7 +8,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 from conf import BASE_DIR
-from tencent_uploader.main import weixin_setup, TencentVideo
+from uploaders.tencent_uploader.main import weixin_setup, TencentVideo
 from utils.constant import TencentZoneTypes
 from utils.files_times import generate_schedule_time_next_day, get_title_and_hashtags
 

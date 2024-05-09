@@ -6,7 +6,7 @@ from playwright.async_api import Playwright, async_playwright
 import time
 import os
 import asyncio
-from tk_uploader.tk_config import Tk_Locator
+from uploaders.tk_uploader.tk_config import Tk_Locator
 from utils.files_times import get_absolute_path
 
 

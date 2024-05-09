@@ -43,8 +43,34 @@ def get_title_and_hashtags(filename):
 
     return title, hashtags
 
+
 # TODO: Provide an alternative way to generate video schedule.
 # Should be able customize: when the first upload is, the intervals between uploads
+def generate_schedule_interval(total_videos, interval=60, timestamps=False, start_time=30):
+    """
+    Generate a schedule for video uploads by separating each upload by a fixed time interval
+
+    Args:
+    - total_videos: Total number of videos to be uploaded.
+    - interval: The number of minutes between each upload.
+    - timestamps: Boolean to decide whether to return timestamps or datetime objects.
+    - start_time: Start from after start_days.
+
+    Returns:
+    - A list of scheduling times for the videos, either as timestamps or datetime objects.
+    """
+    schedule = []
+    current_time = datetime.now()
+
+    for vid_num in range(total_videos):
+        time_offset = timedelta(minutes=interval * vid_num + start_time)
+        schedule.append(current_time + time_offset)
+
+    if timestamps:
+        schedule = [int(time.timestamp()) for time in schedule]
+    return schedule
+
+
 def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=None, timestamps=False, start_days=0):
     """
     Generate a schedule for video uploads, starting from the next day.
@@ -88,3 +114,10 @@ def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=No
     if timestamps:
         schedule = [int(time.timestamp()) for time in schedule]
     return schedule
+
+
+if __name__ == "__main__":
+    # quick unit tests
+    # each time should be 2 hours apart
+    print(generate_schedule_interval(10, 120))
+    print(generate_schedule_interval(5, 100, start_time=120))

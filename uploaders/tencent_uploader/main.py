@@ -72,9 +72,9 @@ async def weixin_setup(account_file, handle=False):
         if not handle:
             return False
         print('[+] cookie文件不存在或已失效，即将自动打开浏览器，请扫码登录，登陆后会自动生成cookie文件')
-        # await save_storage_state(account_file)
+        await save_storage_state(account_file)
         # os.system('python -m playwright install')
-        os.system(f'playwright codegen channels.weixin.qq.com --save-storage={account_file}')  # 生成cookie文件
+        # os.system(f'playwright codegen channels.weixin.qq.com --save-storage={account_file}')  # 生成cookie文件
     return True
 
 
