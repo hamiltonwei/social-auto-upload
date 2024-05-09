@@ -43,7 +43,8 @@ def get_title_and_hashtags(filename):
 
     return title, hashtags
 
-
+# TODO: Provide an alternative way to generate video schedule.
+# Should be able customize: when the first upload is, the intervals between uploads
 def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=None, timestamps=False, start_days=0):
     """
     Generate a schedule for video uploads, starting from the next day.

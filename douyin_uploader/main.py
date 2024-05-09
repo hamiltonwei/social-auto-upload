@@ -27,7 +27,6 @@ async def cookie_auth(account_file):
 async def douyin_setup(account_file, handle=False):
     if not os.path.exists(account_file) or not await cookie_auth(account_file):
         if not handle:
-            # Todo alert message
             return False
         print('[+] cookie文件不存在或已失效，即将自动打开浏览器，请扫码登录，登陆后会自动生成cookie文件')
         await douyin_cookie_gen(account_file)
