@@ -2,6 +2,7 @@
 # usage: social_uploader --upload --platforms xhs tencent douyin tiktok
 import argparse
 import asyncio
+import json
 
 import os
 import sys
@@ -31,26 +32,49 @@ def parse_cli():
     return args
 
 
-def prepare_to_upload():
+def check_platform_validity():
+    if not args.platforms:
+        print("Please specify at least one valid platforms. \n Currently available platforms are: tencent, douyin")
+        return False
+    else:
+        selected_platforms_set = set(args.platforms)
+        selected_valid_platforms_set = valid_platforms.intersection(selected_platforms_set)
+
+        # if there are invalid platforms specified (or if a duplicate is found):
+        if len(selected_valid_platforms_set) < len(args.platforms):
+            print("some of the platforms you specified are not valid and are ignored."
+                  "\n Currently available platforms are: tencent, douyin")
+        return True
+
+
+def parse_config():
+    with open("config.json", 'r') as file:
+        config = json.load(file)
+        return config
+
+
+def prepare_to_upload(config):
     """
     perform some basic preparations routines before starting the upload
     Ret
     """
-    # TODO: these should be read from a config file
-    filepath = Path(BASE_DIR) / "videos"
-    scheduling_method = "interval"
+    vid_dir = config["video_directory"]
+    if os.path.isabs(vid_dir):
+        filepath = vid_dir
+    else:
+        filepath = Path(BASE_DIR) / config["video_directory"]
 
     # 获取视频目录
     folder_path = Path(filepath)
     # 获取文件夹中的所有文件
     files = list(folder_path.glob("*.mp4"))
     file_num = len(files)
-    schedule = generate_schedule(file_num, scheduling_method)
+    schedule = generate_schedule(file_num, config)
 
     return files, schedule
 
 
-def generate_schedule(file_num, scheduling_method="interval"):
+def generate_schedule(file_num, config):
     """
     generate an upload schedule for scheduled uploading.
     Parameters:
@@ -60,16 +84,21 @@ def generate_schedule(file_num, scheduling_method="interval"):
     Returns:
         the upload schedule (list of datetimes objects)
     """
-    # TODO: the function parameters should be passed from config file.
     publish_datetimes = []
-    if scheduling_method == "next_day":
-        publish_datetimes = generate_schedule_time_next_day(file_num, 1, daily_times=[16])
-    elif scheduling_method == "interval":
-        publish_datetimes = generate_schedule_interval(file_num, interval=1440)
+    scheduling_method = config["scheduling"]["method"]
+    if scheduling_method == "interval":
+        interval = config["scheduling"]["interval_settings"]["interval"]
+        start_time = config["scheduling"]["interval_settings"]["start_time"]
+        publish_datetimes = generate_schedule_interval(file_num, interval, start_time=start_time)
+    elif scheduling_method == "next_day":
+        vid_per_day = config["scheduling"]["next_day_settings"]["videos_per_day"]
+        start_time = config["scheduling"]["next_day_settings"]["start_time"]
+        daily_times = config["scheduling"]["next_day_settings"]["daily_times"]
+        publish_datetimes = generate_schedule_time_next_day(file_num, vid_per_day, daily_times, start_time=start_time)
     return publish_datetimes
 
 
-def get_account_file(platform):
+def get_account_file(platform, config):
     """
     generate the account file for the specified platform
     Parameters:
@@ -77,12 +106,12 @@ def get_account_file(platform):
     Returns:
         the upload schedule (list of datetimes objects)
     """
-    if platform == "tencent":
-        account_file = Path(BASE_DIR / "uploaders" / "tencent_uploader" / "account.json")  # TODO: should be loaded from config
-    elif platform == "douyin":
-        account_file = Path(BASE_DIR / "uploaders" / "douyin_uploader" / "account.json")
+    acc_dir = config["cookie_directory"]
+    if os.path.isabs(acc_dir):
+        filepath = acc_dir
     else:
-        return None
+        filepath = Path(BASE_DIR) / config["cookie_directory"]
+    account_file = Path(BASE_DIR / filepath / config["cookie_files"][platform])
     return account_file
 
 
@@ -110,14 +139,14 @@ def upload_to_douyin(files, account_file, schedule):
         asyncio.run(app.main(), debug=False)
 
 
-def upload(platform):
+def upload(platform, config):
     """
     Handle uploading to various platforms. Will be called if the "--upload" option is present.
     Parameters:
         - str platform: the platform we are uploading to.
     """
-    files, schedule = prepare_to_upload()
-    account_file = get_account_file(platform)
+    files, schedule = prepare_to_upload(config)
+    account_file = get_account_file(platform, config)
     for index, file in enumerate(files):
         title, tags = get_title_and_hashtags(str(file))
         print_file_infos(file, title, tags)
@@ -131,29 +160,14 @@ def upload(platform):
         # print("Uploading to Douyin...")
 
 
-def check_platform_validity():
-    if not args.platforms:
-        print("Please specify at least one valid platforms. \n Currently available platforms are: tencent, douyin")
-        return False
-    else:
-        selected_platforms_set = set(args.platforms)
-        selected_valid_platforms_set = valid_platforms.intersection(selected_platforms_set)
-
-        # if there are invalid platforms specified (or if a duplicate is found):
-        if len(selected_valid_platforms_set) < len(args.platforms):
-            print("some of the platforms you specified are not valid and are ignored."
-                  "\n Currently available platforms are: tencent, douyin")
-        return True
-
-
 if __name__ == "__main__":
-    # TODO: add a config file specifying video directories, upload schedules etc.
     # TODO: Video title isn't being filled in the title bar.
     valid_platforms = {"douyin", "tencent"}
 
     args = parse_cli()
+    config = parse_config()
     if args.upload and check_platform_validity():
         for platform in args.platforms:
-            upload(platform)
+            upload(platform, config)
 
 

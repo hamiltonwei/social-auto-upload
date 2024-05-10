@@ -1,3 +1,6 @@
+## Preface:
+This project is my personal fork of social-auto-upload by @dreammis, with additional changes added to fit my personal needs. I would like to thank @dreammis for providing the fundations for this fork. 
+
 # social-auto-upload
 social-auto-upload 该项目旨在自动化发布视频到各个社交媒体平台
 

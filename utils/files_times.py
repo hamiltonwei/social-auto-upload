@@ -44,8 +44,6 @@ def get_title_and_hashtags(filename):
     return title, hashtags
 
 
-# TODO: Provide an alternative way to generate video schedule.
-# Should be able customize: when the first upload is, the intervals between uploads
 def generate_schedule_interval(total_videos, interval=60, timestamps=False, start_time=30):
     """
     Generate a schedule for video uploads by separating each upload by a fixed time interval
@@ -71,7 +69,7 @@ def generate_schedule_interval(total_videos, interval=60, timestamps=False, star
     return schedule
 
 
-def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=None, timestamps=False, start_days=0):
+def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=None, timestamps=False, start_time=30):
     """
     Generate a schedule for video uploads, starting from the next day.
 
@@ -80,7 +78,7 @@ def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=No
     - videos_per_day: Number of videos to be uploaded each day.
     - daily_times: Optional list of specific times of the day to publish the videos.
     - timestamps: Boolean to decide whether to return timestamps or datetime objects.
-    - start_days: Start from after start_days.
+    - start_time: Start uploading after start_time minutes
 
     Returns:
     - A list of scheduling times for the videos, either as timestamps or datetime objects.
@@ -97,10 +95,10 @@ def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=No
 
     # Generate timestamps
     schedule = []
-    current_time = datetime.now()
+    current_time = datetime.now() + timedelta(minutes=start_time)
 
     for video in range(total_videos):
-        day = video // videos_per_day + start_days + 1  # +1 to start from the next day
+        day = video // videos_per_day
         daily_video_index = video % videos_per_day
 
         # Calculate the time for the current video
