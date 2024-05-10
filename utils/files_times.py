@@ -76,7 +76,7 @@ def generate_schedule_interval(total_videos, interval=60, timestamps=False, star
         schedule = [int(time.timestamp()) for time in schedule]
     return schedule
 
-
+# TODO: Make a separate scheduler class that takes in these parameters as variables.
 def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=None, timestamps=False, start_days=0):
     """
     Generate a schedule for video uploads, starting from the next day.
