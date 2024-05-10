@@ -25,7 +25,7 @@ if __name__ == '__main__':
     publish_datetimes = generate_schedule_time_next_day(file_num, 1, daily_times=[16])
     cookie_setup = asyncio.run(douyin_setup(account_file, handle=False))
     for index, file in enumerate(files):
-        title, tags = get_title_and_hashtags(str(file))
+        title, tags, short_title = get_title_and_hashtags(str(file))
         # 打印视频文件名、标题和 hashtag
         print(f"视频文件名：{file}")
         print(f"标题：{title}")

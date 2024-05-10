@@ -25,7 +25,7 @@ if __name__ == '__main__':
     cookie_setup = asyncio.run(weixin_setup(account_file, handle=True))
     category = TencentZoneTypes.LIFESTYLE.value  # 标记原创需要否则不需要传
     for index, file in enumerate(files):
-        title, tags = get_title_and_hashtags(str(file))
+        title, tags, short_title = get_title_and_hashtags(str(file))
         # 打印视频文件名、标题和 hashtag
         print(f"视频文件名：{file}")
         print(f"标题：{title}")

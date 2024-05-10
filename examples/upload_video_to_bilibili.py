@@ -25,7 +25,7 @@ if __name__ == '__main__':
     timestamps = generate_schedule_time_next_day(file_num, 1, daily_times=[16], timestamps=True)
 
     for index, file in enumerate(files):
-        title, tags = get_title_and_hashtags(str(file))
+        title, tags, short_title = get_title_and_hashtags(str(file))
         # just avoid error, bilibili don't allow same title of video.
         title += random_emoji()
         tags_str = ','.join([tag for tag in tags])

@@ -5,7 +5,6 @@ import json
 from uploaders.master_uploader import MasterUploader
 
 
-
 def parse_cli():
     """
     Defines the syntax for the command line.
@@ -54,5 +53,3 @@ if __name__ == "__main__":
     if args.upload and check_platform_validity():
         for platform in args.platforms:
             uploader.upload(platform)
-
-

@@ -79,8 +79,9 @@ async def weixin_setup(account_file, handle=False):
 
 
 class TencentVideo(object):
-    def __init__(self, title, file_path, tags, publish_date: datetime, account_file, category=None):
+    def __init__(self, title, file_path, tags, publish_date: datetime, account_file, category=None, short_title=""):
         self.title = title  # 视频标题
+        self.short_title = short_title
         self.file_path = file_path
         self.tags = tags
         self.publish_date = publish_date
@@ -181,7 +182,7 @@ class TencentVideo(object):
             "xpath=following-sibling::div").locator(
             'span input[type="text"]')
         if await short_title_element.count():
-            short_title = format_str_for_short_title(self.title)
+            short_title = format_str_for_short_title(self.short_title)
             await short_title_element.fill(short_title)
 
     async def click_publish(self, page):

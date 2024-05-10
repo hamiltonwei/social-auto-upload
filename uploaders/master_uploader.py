@@ -83,25 +83,26 @@ class MasterUploader():
         account_file = Path(BASE_DIR / filepath / self.config["cookie_files"][platform])
         return account_file
 
-    def _print_file_infos(self, file, title, tags):
+    def _print_file_infos(self, file, title, tags, short_title=""):
         # 打印视频文件名、标题和 hashtag
         print(f"视频文件名：{file}")
+        print(f"视频短标题：{short_title}")
         print(f"标题：{title}")
         print(f"Hashtag：{tags}")
 
     def _upload_to_tencent(self, files, account_file, schedule):
         cookie_setup = asyncio.run(weixin_setup(account_file, handle=True))
-        category = TencentZoneTypes.LIFESTYLE.value  # 标记原创需要否则不需要传
+        category = TencentZoneTypes.MUSIC.value  # 标记原创需要否则不需要传
         for index, file in enumerate(files):
-            title, tags = get_title_and_hashtags(str(file))
-            app = TencentVideo(title, file, tags, schedule[index], account_file, category)
+            title, tags, short_title = get_title_and_hashtags(str(file))
+            app = TencentVideo(title, file, tags, schedule[index], account_file, category, short_title=short_title)
             asyncio.run(app.main(), debug=False)
 
     def _upload_to_douyin(self, files, account_file, schedule):
         cookie_setup = asyncio.run(douyin_setup(account_file, handle=True))
         for index, file in enumerate(files):
-            title, tags = get_title_and_hashtags(str(file))
-            app = DouYinVideo(title, file, tags, schedule[index], account_file)
+            title, tags, short_title = get_title_and_hashtags(str(file))
+            app = DouYinVideo(title, file, tags, schedule[index], account_file, short_title=short_title)
             asyncio.run(app.main(), debug=False)
 
     def upload(self, platform):
@@ -113,8 +114,8 @@ class MasterUploader():
         files, schedule = self._prepare_to_upload()
         account_file = self._get_account_file(platform)
         for index, file in enumerate(files):
-            title, tags = get_title_and_hashtags(str(file))
-            self._print_file_infos(file, title, tags)
+            title, tags, short_title = get_title_and_hashtags(str(file))
+            self._print_file_infos(file, title, tags, short_title=short_title)
 
         # start handling different platforms:
         if platform == "tencent":

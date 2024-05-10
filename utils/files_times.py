@@ -38,10 +38,17 @@ def get_title_and_hashtags(filename):
 
     # 获取标题和 hashtag
     splite_str = content.strip().split("\n")
-    title = splite_str[0]
-    hashtags = splite_str[1].replace("#", "").split(" ")
+    # assume short title is empty if there are only two lines in the video meta file.
+    if len(splite_str) < 3:
+        short_title = ""
+        title = splite_str[0]
+        hashtags = splite_str[1].replace("#", "").split(" ")
+    else:
+        short_title = splite_str[0]
+        title = splite_str[1]
+        hashtags = splite_str[2].replace("#", "").split(" ")
 
-    return title, hashtags
+    return title, hashtags, short_title
 
 
 # Should be able customize: when the first upload is, the intervals between uploads
@@ -75,6 +82,7 @@ def generate_schedule_interval(total_videos, interval=60, timestamps=False, star
     if timestamps:
         schedule = [int(time.timestamp()) for time in schedule]
     return schedule
+
 
 # TODO: Make a separate scheduler class that takes in these parameters as variables.
 def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=None, timestamps=False, start_days=0):
@@ -124,5 +132,8 @@ def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=No
 
 if __name__ == "__main__":
     # quick unit tests
-    print(generate_schedule_interval(10, 120))
-    print(generate_schedule_interval(5, 100, start_time=120))
+    # print(generate_schedule_interval(10, 120))
+    # print(generate_schedule_interval(5, 100, start_time=120))
+
+    title, tag, short_title = get_title_and_hashtags("C:\- Personal Files\Codes\social-auto-upload\\videos\\2023-12-19-instagram.txt")
+    print(f"short title:{short_title}\n tile:{title} \ntags:{tag}")

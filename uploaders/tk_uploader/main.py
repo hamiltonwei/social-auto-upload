@@ -66,8 +66,9 @@ async def get_tiktok_cookie(account_file):
 
 
 class TiktokVideo(object):
-    def __init__(self, title, file_path, tags, publish_date: datetime, account_file):
+    def __init__(self, title, file_path, tags, publish_date: datetime, account_file, short_title=""):
         self.title = title
+        self.short_title = short_title
         self.file_path = file_path
         self.tags = tags
         self.publish_date = publish_date

@@ -52,8 +52,9 @@ async def douyin_cookie_gen(account_file):
 
 
 class DouYinVideo(object):
-    def __init__(self, title, file_path, tags, publish_date: datetime, account_file):
+    def __init__(self, title, file_path, tags, publish_date: datetime, account_file, short_title=""):
         self.title = title  # 视频标题
+        self.short_title = short_title
         self.file_path = file_path
         self.tags = tags
         self.publish_date = publish_date
@@ -80,6 +81,17 @@ class DouYinVideo(object):
     async def handle_upload_error(self, page):
         print("视频出错了，重新上传中")
         await page.locator('div.progress-div [class^="upload-btn-input"]').set_input_files(self.file_path)
+
+    async def _enter_location(self, page):
+        await page.locator('div.semi-select span:has-text("输入地理位置")').click()
+        await asyncio.sleep(1)
+        print("clear existing location")
+        # await page.keyboard.press("Backspace")
+        await page.keyboard.press("Control+KeyA")
+        await page.keyboard.press("Delete")
+        await page.keyboard.type("杭州市")
+        await asyncio.sleep(1)
+        await page.locator('div[role="listbox"] [role="option"]').first.click()
 
     async def upload(self, playwright: Playwright) -> None:
         # 使用 Chromium 浏览器启动一个浏览器实例
@@ -112,24 +124,31 @@ class DouYinVideo(object):
                 print("  [-] 正在等待进入视频发布页面...")
                 await asyncio.sleep(0.1)
 
+
+        await asyncio.sleep(1)
+        print("  [-] 正在填充标题和话题...")
+
         # 填充标题和话题
         # 检查是否存在包含输入框的元素
         # 这里为了避免页面变化，故使用相对位置定位：作品标题父级右侧第一个元素的input子元素
-        await asyncio.sleep(1)
-        print("  [-] 正在填充标题和话题...")
-        title_container = page.get_by_text('作品标题').locator("..").locator("xpath=following-sibling::div[1]").locator("input")
-        if await title_container.count():
-            await title_container.fill(self.title[:30])
-        else:
-            titlecontainer = page.locator(".notranslate")
-            await titlecontainer.click()
-            print("clear existing title")
-            await page.keyboard.press("Backspace")
-            await page.keyboard.press("Control+KeyA")
-            await page.keyboard.press("Delete")
-            print("filling new  title")
-            await page.keyboard.type(self.title)
-            await page.keyboard.press("Enter")
+        # title_container = page.get_by_text('作品标题').locator("..").locator("xpath=following-sibling::div[1]").locator("input")
+        # titlecount = title_container.count()
+        # if await titlecount:
+        #     await title_container.fill(self.title[:30])
+        # else:
+
+        # fill in the short title
+        await page.get_by_placeholder("作品标题").fill(self.short_title[:30])
+        # fill in the content
+        titlecontainer = page.locator(".notranslate")
+        await titlecontainer.click()
+        print("clear existing title")
+        await page.keyboard.press("Backspace")
+        await page.keyboard.press("Control+KeyA")
+        await page.keyboard.press("Delete")
+        print("filling new  title")
+        await page.keyboard.type(self.title)
+        await page.keyboard.press("Enter")
         css_selector = ".zone-container"
         for index, tag in enumerate(self.tags, start=1):
             print("正在添加第%s个话题" % index)
@@ -155,16 +174,7 @@ class DouYinVideo(object):
                 print("  [-] 正在上传视频中...")
                 await asyncio.sleep(2)
 
-        # 更换可见元素
-        await page.locator('div.semi-select span:has-text("输入地理位置")').click()
-        await asyncio.sleep(1)
-        print("clear existing location")
-        await page.keyboard.press("Backspace")
-        await page.keyboard.press("Control+KeyA")
-        await page.keyboard.press("Delete")
-        await page.keyboard.type("杭州市")
-        await asyncio.sleep(1)
-        await page.locator('div[role="listbox"] [role="option"]').first.click()
+        # self._enter_location(page)
 
         # 頭條/西瓜
         third_part_element = '[class^="info"] > [class^="first-part"] div div.semi-switch'
