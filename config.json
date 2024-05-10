@@ -1,6 +1,6 @@
 {
   "video_directory":"videos",
-  "cookie_directory": "accounts",
+  "cookie_directory": "cookies",
   "cookie_files":
     {
       "douyin": "douyin.json",
@@ -10,11 +10,11 @@
     "method": "interval",
     "interval_settings": {
       "interval": 60,
-      "start_time": 30
+      "start_time": 60
     },
     "next_day_settings": {
       "videos_per_day": 1,
-      "start_time": 30,
+      "start_day": 0,
       "daily_times": [6, 11, 14, 16, 22]
     }
   }

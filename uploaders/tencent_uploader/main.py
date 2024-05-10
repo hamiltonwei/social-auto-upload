@@ -120,7 +120,7 @@ class TencentVideo(object):
         # 输入小时部分（假设选择11小时）
         await page.click('input[placeholder="请选择时间"]')
         await page.keyboard.press("Control+KeyA")
-        await page.keyboard.type(str(publish_date.hour))
+        await page.keyboard.type(str(publish_date.hour) + ":" + str(publish_date.minute))
 
         # 选择标题栏（令定时时间生效）
         await page.locator("div.input-editor").click()
