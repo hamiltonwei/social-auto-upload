@@ -1,15 +1,17 @@
 import asyncio
 
+
 import os
 import sys
 import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-from uploaders.tencent_uploader.main import weixin_setup, TencentVideo
-from uploaders.douyin_uploader.main import douyin_setup, DouYinVideo
+from uploaders.tencent_uploader.main import TencentVideo
+from uploaders.douyin_uploader.main import DouYinVideo
 from utils.constant import TencentZoneTypes
 from utils.files_times import *
+from authenticator import PlaywrightAuthenticator
 
 # TODO: make a static method that initialize this class from the config file.
 
@@ -22,6 +24,7 @@ class MasterUploader():
         # What if you want to initialize this class for the first time without any config file?
         # What if you want to modify its settings in a gui, without saving it to the config file?
         self.config = config
+        self._authenticator = PlaywrightAuthenticator()
 
     def _prepare_to_upload(self):
         """
@@ -91,7 +94,7 @@ class MasterUploader():
         print(f"Hashtag：{tags}")
 
     def _upload_to_tencent(self, files, account_file, schedule):
-        cookie_setup = asyncio.run(weixin_setup(account_file, handle=True))
+        cookie_setup = asyncio.run(self._authenticator.set_up("tencent", account_file, handle=True))
         category = TencentZoneTypes.MUSIC.value  # 标记原创需要否则不需要传
         for index, file in enumerate(files):
             title, tags, short_title = get_title_and_hashtags(str(file))
@@ -99,7 +102,7 @@ class MasterUploader():
             asyncio.run(app.main(), debug=False)
 
     def _upload_to_douyin(self, files, account_file, schedule):
-        cookie_setup = asyncio.run(douyin_setup(account_file, handle=True))
+        cookie_setup = asyncio.run(self._authenticator.set_up("douyin", account_file, handle=True))
         for index, file in enumerate(files):
             title, tags, short_title = get_title_and_hashtags(str(file))
             app = DouYinVideo(title, file, tags, schedule[index], account_file, short_title=short_title)

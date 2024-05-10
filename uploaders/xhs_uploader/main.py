@@ -1,59 +1,74 @@
-import configparser
-import json
-import pathlib
-from time import sleep
+from datetime import datetime
 
-import requests
-from playwright.sync_api import sync_playwright
-
-from conf import BASE_DIR, XHS_SERVER
-
-config = configparser.RawConfigParser()
-config.read('accounts.ini')
+from playwright.async_api import Playwright, async_playwright
+import os
+import asyncio
 
 
-def sign_local(uri, data=None, a1="", web_session=""):
-    for _ in range(10):
+async def xhs_cookie_gen(account_file):
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
+        await page.goto("https://www.xiaohongshu.com")
+        await page.pause()
+        # 点击调试器的继续，保存cookie
+        await context.storage_state(path=account_file)
+
+
+async def cookie_auth(account_file):
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        context = await browser.new_context(storage_state=account_file)
+        # 创建一个新的页面
+        page = await context.new_page()
+        # 访问指定的 URL
+        await page.goto("https://creator.douyin.com/creator-micro/content/upload")
         try:
-            with sync_playwright() as playwright:
-                stealth_js_path = pathlib.Path(
-                    BASE_DIR) / "xhs_uploader" / "cdn.jsdelivr.net_gh_requireCool_stealth.min.js_stealth.min.js"
-                chromium = playwright.chromium
-
-                # 如果一直失败可尝试设置成 False 让其打开浏览器，适当添加 sleep 可查看浏览器状态
-                browser = chromium.launch(headless=True)
-
-                browser_context = browser.new_context()
-                browser_context.add_init_script(path=stealth_js_path)
-                context_page = browser_context.new_page()
-                context_page.goto("https://www.xiaohongshu.com")
-                browser_context.add_cookies([
-                    {'name': 'a1', 'value': a1, 'domain': ".xiaohongshu.com", 'path': "/"}]
-                )
-                context_page.reload()
-                # 这个地方设置完浏览器 cookie 之后，如果这儿不 sleep 一下签名获取就失败了，如果经常失败请设置长一点试试
-                sleep(2)
-                encrypt_params = context_page.evaluate("([url, data]) => window._webmsxyw(url, data)", [uri, data])
-                return {
-                    "x-s": encrypt_params["X-s"],
-                    "x-t": str(encrypt_params["X-t"])
-                }
-        except Exception:
-            # 这儿有时会出现 window._webmsxyw is not a function 或未知跳转错误，因此加一个失败重试趴
-            pass
-    raise Exception("重试了这么多次还是无法签名成功，寄寄寄")
+            await page.wait_for_selector("短信登录", timeout=5000)  # 等待5秒
+            print("[+] 等待5秒 cookie 失效")
+            return False
+        except:
+            print("[+] cookie 有效")
+            return True
 
 
-def sign(uri, data=None, a1="", web_session=""):
-    # 填写自己的 flask 签名服务端口地址
-    res = requests.post(f"{XHS_SERVER}/sign",
-                        json={"uri": uri, "data": data, "a1": a1, "web_session": web_session})
-    signs = res.json()
-    return {
-        "x-s": signs["x-s"],
-        "x-t": signs["x-t"]
-    }
+async def xhs_setup(account_file, handle=False):
+    exists = os.path.exists(account_file)
+    if not exists or not await cookie_auth(account_file):
+        if not handle:
+            return False
+        print('[+] cookie文件不存在或已失效，即将自动打开浏览器，请扫码登录，登陆后会自动生成cookie文件')
+        await xhs_cookie_gen(account_file)
+    return True
 
 
-def beauty_print(data: dict):
-    print(json.dumps(data, ensure_ascii=False, indent=2))
+
+class XHSVideo(object):
+    def __init__(self, title, file_path, tags, publish_date: datetime, account_file, short_title=""):
+        self.title = title  # 视频标题
+        self.short_title = short_title
+        self.file_path = file_path
+        self.tags = tags
+        self.publish_date = publish_date
+        self.account_file = account_file
+        self.date_format = '%Y年%m月%d日 %H:%M'
+        self.local_executable_path = ""  # change me
+
+    async def set_schedule_time(self, page, publish_date):
+        raise NotImplementedError
+
+    async def handle_upload_error(self, page):
+        print("视频出错了，重新上传中")
+        raise NotImplementedError
+
+    async def _enter_location(self, page):
+        raise NotImplementedError
+
+    async def upload(self, playwright: Playwright) -> None:
+        raise NotImplementedError
+
+    async def main(self):
+        async with async_playwright() as playwright:
+            await self.upload(playwright)
+

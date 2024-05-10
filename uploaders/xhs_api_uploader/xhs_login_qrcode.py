@@ -5,7 +5,7 @@ from time import sleep
 
 from xhs import XhsClient
 
-from uploaders.xhs_uploader.main import sign
+from uploaders.xhs_api_uploader.main import sign
 
 # pip install qrcode
 if __name__ == '__main__':

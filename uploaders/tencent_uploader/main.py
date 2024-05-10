@@ -33,51 +33,6 @@ def format_str_for_short_title(origin_title: str) -> str:
     return formatted_string
 
 
-async def cookie_auth(account_file):
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True)
-        context = await browser.new_context(storage_state=account_file)
-        # 创建一个新的页面
-        page = await context.new_page()
-        # 访问指定的 URL
-        await page.goto("https://channels.weixin.qq.com/platform/post/create")
-        try:
-            await page.wait_for_selector('div.title-name:has-text("视频号小店")', timeout=5000)  # 等待5秒
-            print("[+] 等待5秒 cookie 失效")
-            return False
-        except:
-            print("[+] cookie 有效")
-            return True
-
-
-async def save_storage_state(account_file: str):
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
-        page = await context.new_page()
-        await page.goto("https://channels.weixin.qq.com")
-        print("请在浏览器中扫码登录...")
-        await asyncio.sleep(20)  # 给用户60秒时间进行扫码登录
-
-        # 保存存储状态到文件
-        storage_state = await context.storage_state()
-        with open(account_file, 'w') as f:
-            f.write(json.dumps(storage_state))
-        await browser.close()
-
-
-async def weixin_setup(account_file, handle=False):
-    account_file = get_absolute_path(account_file, "tencent_uploader")
-    if not os.path.exists(account_file) or not await cookie_auth(account_file):
-        if not handle:
-            return False
-        print('[+] cookie文件不存在或已失效，即将自动打开浏览器，请扫码登录，登陆后会自动生成cookie文件')
-        await save_storage_state(account_file)
-        # os.system('python -m playwright install')
-        # os.system(f'playwright codegen channels.weixin.qq.com --save-storage={account_file}')  # 生成cookie文件
-    return True
-
-
 class TencentVideo(object):
     def __init__(self, title, file_path, tags, publish_date: datetime, account_file, category=None, short_title=""):
         self.title = title  # 视频标题

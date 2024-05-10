@@ -7,50 +7,6 @@ import os
 import asyncio
 
 
-async def cookie_auth(account_file):
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True)
-        context = await browser.new_context(storage_state=account_file)
-        # 创建一个新的页面
-        page = await context.new_page()
-        # 访问指定的 URL
-        await page.goto("https://creator.douyin.com/creator-micro/content/upload")
-        try:
-            await page.wait_for_selector("div.boards-more h3:text('抖音排行榜')", timeout=5000)  # 等待5秒
-            print("[+] 等待5秒 cookie 失效")
-            return False
-        except:
-            print("[+] cookie 有效")
-            return True
-
-
-async def douyin_setup(account_file, handle=False):
-    exists = os.path.exists(account_file)
-    if not exists or not await cookie_auth(account_file):
-        if not handle:
-            return False
-        print('[+] cookie文件不存在或已失效，即将自动打开浏览器，请扫码登录，登陆后会自动生成cookie文件')
-        await douyin_cookie_gen(account_file)
-    return True
-
-
-async def douyin_cookie_gen(account_file):
-    async with async_playwright() as playwright:
-        options = {
-            'headless': False
-        }
-        # Make sure to run headed.
-        browser = await playwright.chromium.launch(**options)
-        # Setup context however you like.
-        context = await browser.new_context()  # Pass any options
-        # Pause the page, and start recording manually.
-        page = await context.new_page()
-        await page.goto("https://www.douyin.com/")
-        await page.pause()
-        # 点击调试器的继续，保存cookie
-        await context.storage_state(path=account_file)
-
-
 class DouYinVideo(object):
     def __init__(self, title, file_path, tags, publish_date: datetime, account_file, short_title=""):
         self.title = title  # 视频标题

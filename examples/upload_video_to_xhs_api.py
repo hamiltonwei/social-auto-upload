@@ -12,7 +12,7 @@ from xhs import XhsClient
 
 from conf import BASE_DIR
 from utils.files_times import generate_schedule_time_next_day, get_title_and_hashtags
-from uploaders.xhs_uploader import sign_local, beauty_print
+from uploaders.xhs_api_uploader.main import sign_local, beauty_print
 
 config = configparser.RawConfigParser()
 config.read(Path(BASE_DIR / "xhs_uploader" / "accounts.ini"))
