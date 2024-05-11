@@ -34,7 +34,7 @@ class PlaywrightAuthenticator():
 
             "xhs": {
                 "login_url": "https://www.xiaohongshu.com",
-                "auth_url": "https://creator.douyin.com/creator-micro/content/upload",
+                "auth_url": "https://creator.xiaohongshu.com/publish/publish?source=official",
                 "failure_str": "短信登录"}
         }
 

@@ -45,7 +45,7 @@ def parse_config():
 
 if __name__ == "__main__":
     # TODO: Video title isn't being filled in the title bar for douyin.
-    valid_platforms = {"douyin", "tencent"}
+    valid_platforms = {"douyin", "tencent", "xhs"}
 
     args = parse_cli()
     config = parse_config()

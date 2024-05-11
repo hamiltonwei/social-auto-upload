@@ -7,11 +7,10 @@ import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-from uploaders.tencent_uploader.main import TencentVideo
-from uploaders.douyin_uploader.main import DouYinVideo
+from uploaders.video import *
 from utils.constant import TencentZoneTypes
 from utils.files_times import *
-from authenticator import PlaywrightAuthenticator
+from uploaders.authenticator import PlaywrightAuthenticator
 
 # TODO: make a static method that initialize this class from the config file.
 
@@ -93,20 +92,6 @@ class MasterUploader():
         print(f"标题：{title}")
         print(f"Hashtag：{tags}")
 
-    def _upload_to_tencent(self, files, account_file, schedule):
-        cookie_setup = asyncio.run(self._authenticator.set_up("tencent", account_file, handle=True))
-        category = TencentZoneTypes.MUSIC.value  # 标记原创需要否则不需要传
-        for index, file in enumerate(files):
-            title, tags, short_title = get_title_and_hashtags(str(file))
-            app = TencentVideo(title, file, tags, schedule[index], account_file, category, short_title=short_title)
-            asyncio.run(app.main(), debug=False)
-
-    def _upload_to_douyin(self, files, account_file, schedule):
-        cookie_setup = asyncio.run(self._authenticator.set_up("douyin", account_file, handle=True))
-        for index, file in enumerate(files):
-            title, tags, short_title = get_title_and_hashtags(str(file))
-            app = DouYinVideo(title, file, tags, schedule[index], account_file, short_title=short_title)
-            asyncio.run(app.main(), debug=False)
 
     def upload(self, platform):
         """
@@ -120,8 +105,23 @@ class MasterUploader():
             title, tags, short_title = get_title_and_hashtags(str(file))
             self._print_file_infos(file, title, tags, short_title=short_title)
 
+        asyncio.run(self._authenticator.set_up(platform, account_file, handle=True))
         # start handling different platforms:
-        if platform == "tencent":
-            self._upload_to_tencent(files, account_file, schedule)
-        elif platform == "douyin":
-            self._upload_to_douyin(files, account_file, schedule)
+        # for loop so that we can process all videos as a queue.
+        for index, file in enumerate(files):
+            title, tags, short_title = get_title_and_hashtags(str(file))
+
+            app = None
+            if platform == "douyin":
+                app = DouYinVideo(title, file, tags, schedule[index], account_file, short_title=short_title)
+
+            elif platform == "tencent":
+                # TODO: should be passed from config/meta data,
+                #  but I'm a musician so probably would never change that lol
+                category = TencentZoneTypes.MUSIC.value
+                app = TencentVideo(title, file, tags, schedule[index], account_file, category, short_title=short_title)
+
+            elif platform == "xhs":
+                app = XHSVideo(title, file, tags, schedule[index], account_file, short_title=short_title)
+
+            asyncio.run(app.main(), debug=False)
