@@ -372,13 +372,13 @@ class TencentVideo(object):
                 if await page.locator('button:has-text("声明原创"):visible').count():
                     await page.locator('button:has-text("声明原创"):visible').click()
 
-    def _format_str_for_short_title(origin_title: str) -> str:
+    def _format_str_for_short_title(self) -> str:
         # 定义允许的特殊字符
         allowed_special_chars = "《》“”:+?%°"
 
         # 移除不允许的特殊字符
         filtered_chars = [char if char.isalnum() or char in allowed_special_chars else ' ' if char == ',' else '' for
-                          char in origin_title]
+                          char in self.short_title]
         formatted_string = ''.join(filtered_chars)
 
         # 调整字符串长度

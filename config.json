@@ -16,7 +16,7 @@
     "next_day_settings": {
       "videos_per_day": 1,
       "start_days": 0,
-      "daily_times": [21, 12]
+      "daily_times": [20, 12]
     }
   }
 }
