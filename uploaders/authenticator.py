@@ -21,12 +21,14 @@ class PlaywrightAuthenticator():
         # - a login_url, used to initialize login process
         # - an auth_url, used to verify the successfulness of the login
         # - a failure_str, where if this string is detected on the page, it would indicate an unsuccessful login.
+        #TODO: BUG: Douyin fails to authenticate
         self.auth_dict = {
             "douyin":{
                 "login_url": "https://www.douyin.com/",
                 "auth_url": "https://creator.douyin.com/creator-micro/content/upload",
                 "failure_str": "div.boards-more h3:text('抖音排行榜')",
-                "success_str": "div.tab-item--33ZEJ:has-text('发布视频')"},
+                "success_str": "span.douyin-creator-master-side-upload:has-text('发布作品')",
+                "success_url": "https://creator.douyin.com/creator-micro/home"},
 
             "tencent": {
                 "login_url": "https://channels.weixin.qq.com",
@@ -59,7 +61,7 @@ class PlaywrightAuthenticator():
 
     async def cookie_auth(self, platform, account_file):
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=False)
+            browser = await playwright.chromium.launch(headless=True)
             context = await browser.new_context(storage_state=account_file)
             # 创建一个新的页面
             page = await context.new_page()

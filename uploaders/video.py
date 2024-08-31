@@ -28,26 +28,28 @@ class DouYinVideo(object):
         self.local_executable_path = ""  # change me
 
     async def set_schedule_time(self, page, publish_date):
-        # 选择包含特定文本内容的 label 元素
-        label_element = page.locator("label.radio--4Gpx6:has-text('定时发布')")
-        # 在选中的 label 元素下点击 checkbox
-        await label_element.click()
-        await asyncio.sleep(1)
-        publish_date_hour = publish_date.strftime("%Y-%m-%d %H:%M")
+        if self.publish_date:
+            # 选择包含特定文本内容的 label 元素
+            label_element = page.locator("label.radio--4Gpx6:has-text('定时发布')")
+            # 在选中的 label 元素下点击 checkbox
+            await label_element.click()
+            await asyncio.sleep(1)
+            publish_date_hour = publish_date.strftime("%Y-%m-%d %H:%M")
 
-        await asyncio.sleep(1)
-        await page.locator('.semi-input[placeholder="日期和时间"]').click()
-        await page.keyboard.press("Control+KeyA")
-        await page.keyboard.type(str(publish_date_hour))
-        await page.keyboard.press("Enter")
+            await asyncio.sleep(1)
+            await page.locator('.semi-input[placeholder="日期和时间"]').click()
+            await page.keyboard.press("Control+KeyA")
+            await page.keyboard.type(str(publish_date_hour))
+            await page.keyboard.press("Enter")
 
-        await asyncio.sleep(1)
+            await asyncio.sleep(1)
 
     async def handle_upload_error(self, page):
         print("视频出错了，重新上传中")
         await page.locator('div.progress-div [class^="upload-btn-input"]').set_input_files(self.file_path)
 
     async def upload(self, playwright: Playwright) -> None:
+        # TODO: BUG - A bug is preventing the browser from closing after upload finishes. Please fix.
         # 使用 Chromium 浏览器启动一个浏览器实例
         if self.local_executable_path:
             browser = await playwright.chromium.launch(headless=False, executable_path=self.local_executable_path)
@@ -65,7 +67,7 @@ class DouYinVideo(object):
         print('[-] 正在打开主页...')
         await page.wait_for_url("https://creator.douyin.com/creator-micro/content/upload")
         # 点击 "上传视频" 按钮
-        await page.locator(".upload-btn--9eZLd").set_input_files(self.file_path)
+        await page.locator("input").set_input_files(self.file_path)
 
         # 等待页面跳转到指定的 URL
         while True:
@@ -192,41 +194,42 @@ class TencentVideo(object):
         self.local_executable_path = ""  # change me necessary！
 
     async def set_schedule_time(self, page, publish_date):
-        print("click schedule")
+        if self.publish_date:
+            print("click schedule")
 
-        label_element = page.locator("label").filter(has_text="定时").nth(1)
-        await label_element.click()
+            label_element = page.locator("label").filter(has_text="定时").nth(1)
+            await label_element.click()
 
-        await page.click('input[placeholder="请选择发表时间"]')
+            await page.click('input[placeholder="请选择发表时间"]')
 
-        str_month = str(publish_date.month) if publish_date.month > 9 else "0" + str(publish_date.month)
-        current_month = str_month + "月"
-        # 获取当前的月份
-        page_month = await page.inner_text('span.weui-desktop-picker__panel__label:has-text("月")')
+            str_month = str(publish_date.month) if publish_date.month > 9 else "0" + str(publish_date.month)
+            current_month = str_month + "月"
+            # 获取当前的月份
+            page_month = await page.inner_text('span.weui-desktop-picker__panel__label:has-text("月")')
 
-        # 检查当前月份是否与目标月份相同
-        if page_month != current_month:
-            await page.click('button.weui-desktop-btn__icon__right')
+            # 检查当前月份是否与目标月份相同
+            if page_month != current_month:
+                await page.click('button.weui-desktop-btn__icon__right')
 
-        # 获取页面元素
-        elements = await page.query_selector_all('table.weui-desktop-picker__table a')
+            # 获取页面元素
+            elements = await page.query_selector_all('table.weui-desktop-picker__table a')
 
-        # 遍历元素并点击匹配的元素
-        for element in elements:
-            if 'weui-desktop-picker__disabled' in await element.evaluate('el => el.className'):
-                continue
-            text = await element.inner_text()
-            if text.strip() == str(publish_date.day):
-                await element.click()
-                break
+            # 遍历元素并点击匹配的元素
+            for element in elements:
+                if 'weui-desktop-picker__disabled' in await element.evaluate('el => el.className'):
+                    continue
+                text = await element.inner_text()
+                if text.strip() == str(publish_date.day):
+                    await element.click()
+                    break
 
-        # 输入小时部分（假设选择11小时）
-        await page.click('input[placeholder="请选择时间"]')
-        await page.keyboard.press("Control+KeyA")
-        await page.keyboard.type(str(publish_date.hour) + ":" + str(publish_date.minute))
+            # 输入小时部分（假设选择11小时）
+            await page.click('input[placeholder="请选择时间"]')
+            await page.keyboard.press("Control+KeyA")
+            await page.keyboard.type(str(publish_date.hour) + ":" + str(publish_date.minute))
 
-        # 选择标题栏（令定时时间生效）
-        await page.locator("div.input-editor").click()
+            # 选择标题栏（令定时时间生效）
+            await page.locator("div.input-editor").click()
 
     async def handle_upload_error(self, page):
         print("视频出错了，重新上传中")
@@ -451,19 +454,23 @@ class XHSVideo(object):
 
 # =============================== Private Methods =====================================
     async def _set_schedule_time(self, page):
+        # TODO: XHS always uses Beijing Time instead of the local time zone. Convert the timezone first.
+
         """
         Set the scheduled publishing time on the uploading page.
         """
-        date_placeholder = "请选择日期"
-        date_str = self.publish_date.strftime("%Y-%m-%d %H:%M")
-        await page.locator("label").filter(has_text="定时发布").locator("div").first.click()
-        await page.get_by_placeholder(date_placeholder).click()
-        await page.get_by_placeholder(date_placeholder).press("Control+a")
-        await page.get_by_placeholder(date_placeholder).fill(date_str)
-        await page.get_by_placeholder(date_placeholder).press("Enter")
+        if self.publish_date:
+            date_placeholder = "选择日期和时间"
+            date_str = self.publish_date.strftime("%Y-%m-%d %H:%M")
+            # await page.get_by_placeholder("定时发布").locator("div").first.click()
+            await page.locator("label").filter(has_text="定时发布").locator("span").first.click()
+            await page.get_by_placeholder(date_placeholder).click()
+            await page.get_by_placeholder(date_placeholder).press("Control+a")
+            await page.get_by_placeholder(date_placeholder).fill(date_str)
+            await page.get_by_placeholder(date_placeholder).press("Enter")
 
     async def _add_title_tags(self, page):
-        await page.get_by_placeholder("填写标题，可能会有更多赞哦～").fill(self.short_title[:20])
+        await page.get_by_placeholder("填写标题").fill(self.short_title[:20])
         await page.locator("#post-textarea").fill(self.title + "\n")
         # xhs require you to click on a dropdown menu to "lock in" your hashtag.
         # sometimes your exact hashtag doesn't occur in the dropdown. We just choose the first one.

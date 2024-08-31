@@ -8,15 +8,18 @@
       "xhs": "xhs.json"
     },
   "scheduling":{
-    "method": "next_day",
+    "method": "immediate",
     "interval_settings": {
-      "interval": 1440,
-      "start_time": 60
+      "interval": 120,
+      "start_time": 480
     },
     "next_day_settings": {
       "videos_per_day": 1,
       "start_days": 0,
       "daily_times": [20, 12]
+    },
+    "fixed_settings": {
+      "iso_datestr": "2024-07-26T18:00:00"
     }
   }
 }

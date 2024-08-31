@@ -51,6 +51,10 @@ def get_title_and_hashtags(filename):
     return title, hashtags, short_title
 
 
+def generate_schedule_immediate():
+    return []
+
+
 # Should be able customize: when the first upload is, the intervals between uploads
 def generate_schedule_interval(total_videos, interval=60, timestamps=False, start_time=130):
     """
@@ -128,6 +132,10 @@ def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=No
     if timestamps:
         schedule = [int(time.timestamp()) for time in schedule]
     return schedule
+
+
+def generate_schedule_time_fixed(iso_datestr):
+    return [datetime.fromisoformat(iso_datestr)]
 
 
 if __name__ == "__main__":

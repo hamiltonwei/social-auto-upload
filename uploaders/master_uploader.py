@@ -67,6 +67,10 @@ class MasterUploader():
             daily_times = self.config["scheduling"]["next_day_settings"]["daily_times"]
             publish_datetimes = generate_schedule_time_next_day(file_num, vid_per_day, daily_times,
                                                                 start_days=start_days)
+        elif scheduling_method == "fixed":
+            publish_datetimes = generate_schedule_time_fixed(self.config["scheduling"]["fixed_settings"]["iso_datestr"])
+        elif scheduling_method == "immediate":
+            publish_datetimes = generate_schedule_immediate() #will return empty list.
         return publish_datetimes
 
     def _get_account_file(self, platform):
@@ -99,6 +103,7 @@ class MasterUploader():
         Parameters:
             - str platform: the platform we are uploading to.
         """
+        # TODO: BUG - 原创 window doesn't close and have to manually close.
         files, schedule = self._prepare_to_upload()
         account_file = self._get_account_file(platform)
         for index, file in enumerate(files):
@@ -112,16 +117,21 @@ class MasterUploader():
             title, tags, short_title = get_title_and_hashtags(str(file))
 
             app = None
+            publish_date = None
+            if schedule:
+                publish_date = schedule[index]
+
             if platform == "douyin":
-                app = DouYinVideo(title, file, tags, schedule[index], account_file, short_title=short_title)
+                app = DouYinVideo(title, file, tags, publish_date, account_file, short_title=short_title)
 
             elif platform == "tencent":
                 # TODO: should be passed from config/meta data,
                 #  but I'm a musician so probably would never change that lol
-                category = TencentZoneTypes.MUSIC.value
-                app = TencentVideo(title, file, tags, schedule[index], account_file, category, short_title=short_title)
+                # category = TencentZoneTypes.MUSIC.value
+                category = TencentZoneTypes.TALENT.value
+                app = TencentVideo(title, file, tags, publish_date, account_file, category, short_title=short_title)
 
             elif platform == "xhs":
-                app = XHSVideo(title, file, tags, schedule[index], account_file, short_title=short_title)
+                app = XHSVideo(title, file, tags, publish_date, account_file, short_title=short_title)
 
             asyncio.run(app.main(), debug=False)
